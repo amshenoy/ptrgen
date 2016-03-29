@@ -1,0 +1,75 @@
+#!/usr/bin/python2.7
+
+# Generate standard-form PTR files for LUCID
+import sys
+import time
+from datetime import timedelta
+from dateutil.parser import parse
+import os
+
+
+# Upload functionality
+if "--upload" in sys.argv:
+	i = 0
+	for filename in os.listdir("outbox"):
+		print "Uploading", filename
+		os.system("lftp -e \"set ftps:initial-prot ''; set ftp:ssl-force true; set ftp:ssl-protect-data true; put -O Incoming_lucid_PTRs/ ./outbox/" + filename +  "; bye\" -u lucid,\"(L>lODwr\" ftps://tds1.sa-catapult.co.uk")
+		print "Done!"
+		i += 1
+	# Move outbox to done
+	if i:
+		os.system("mv outbox/* done")
+		print "Upload job successful,", i, "files uploaded to server"
+	else:
+		print "There were no files in the outbox for upload, try generating a PTR file first!"
+	sys.exit(0)
+
+if len(sys.argv) < 2 or len(sys.argv) > 3:
+	print "USAGE: ptrgen start_date [template]"
+	print "Template will default to TEMPLATE_SUMMER if not specified"
+	sys.exit(1)
+elif len(sys.argv) == 3:
+	template_name = sys.argv[2]
+else:
+	template_name = "TEMPLATE_SUMMER" # default
+
+try:
+	day1 = parse(sys.argv[1])
+except:
+	print "The start date specified is not a valid date format"
+	sys.exit(1)
+day2, day3 = day1 + timedelta(days=1), day1 + timedelta(days=2)
+day1, day2, day3 = day1.strftime("%Y-%m-%d"), day2.strftime("%Y-%m-%d"), day3.strftime("%Y-%m-%d")
+
+issue_date = time.strftime("%Y-%m-%dT%H%M%S")
+issue_date_colons = time.strftime("%Y-%m-%dT%H:%M:%S")
+
+try:
+	template = open("templates/" + template_name).read()
+except:
+	print "The template file could not be found!"
+	sys.exit(1)
+outfile = open("outbox/PtrFile_TDS1_LUCID_" + issue_date + "_LUCID-PI.xml", "w")
+id = int(open("store/id").read())
+file_id = int(open("store/file_id").read())
+
+template = template.replace("{FILE_ID}", str(file_id))
+
+# Number PTR IDs
+while True:
+	if not "PTR_ID" in template:
+		break
+	template = template.replace("{PTR_ID}", str(id), 1)
+	id += 1
+
+template = template.replace("{DAY1}", day1).replace("{DAY2}", day2).replace("{DAY3}", day3)
+template = template.replace("{ISSUE_DATE}", issue_date_colons)
+
+outfile.write(template)
+
+# Work out new id and file id and write them to files
+open("store/file_id", "w").write(str(file_id + 1))
+open("store/id", "w").write(str(id + 1))
+
+
+print "PTR file successfully generated; use ptrgen --upload to upload it to the server"
