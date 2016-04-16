@@ -1,0 +1,55 @@
+#!/usr/bin/python2.7
+
+from Tkinter import *
+from PIL import Image, ImageTk
+import os
+import subprocess
+from tkMessageBox import *
+
+def go():
+    start_date = e2.get()
+    template = temp_var.get()
+
+    process = subprocess.Popen(['./ptrgen', start_date, template], stdout=subprocess.PIPE)
+    out, err = process.communicate()
+    lines = out.split("\n")[:-1]
+    error = False
+    for line in lines:
+        if line[:4] == "ERR:":
+            error = True
+            showerror("Error", line[5:])
+        elif line[:4] == "MSG:":
+            showinfo("Info", line[5:])
+    if not error:
+        master.quit()
+
+
+master = Tk()
+master.title("PTR Generator")
+
+img = ImageTk.PhotoImage(Image.open("lucid.jpg"))
+master.tk.call('wm', 'iconphoto', master._w, img)
+
+templates = os.listdir("templates")
+
+Label(master, text="Template:").grid(row=1)
+Label(master, text="Start Date: (YYYY-MM-DD)").grid(row=2)
+
+temp_var = StringVar(master)
+temp_var.set(templates[0]) # default value
+
+e1 = apply(OptionMenu, (master, temp_var) + tuple(templates))
+e2 = Entry(master)
+
+e1.grid(row=1, column=1)
+e2.grid(row=2, column=1)
+
+Button(master, text='Generate!', command=go).grid(row=4, column=0, pady=10, columnspan=2)
+
+img = ImageTk.PhotoImage(Image.open("lucid.jpg"))
+panel = Label(master, image = img)
+panel.grid(row = 0, column = 0, columnspan=2)
+
+master.resizable(width=False, height=False)
+
+mainloop( )
