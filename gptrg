@@ -32,7 +32,7 @@ master.title("PTR Generator")
 img = ImageTk.PhotoImage(Image.open("lucid-thumb.jpg"))
 master.tk.call('wm', 'iconphoto', master._w, img)
 
-templates = os.listdir("templates")
+templates = sorted(os.listdir("templates"))
 
 Label(master, text="Template:").grid(row=1)
 Label(master, text="Start Date: (YYYY-MM-DD)").grid(row=2)
