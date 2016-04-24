@@ -6,6 +6,8 @@ import os
 import subprocess
 from tkMessageBox import *
 
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
+
 def go():
     start_date = e2.get()
     template = temp_var.get()
