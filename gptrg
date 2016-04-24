@@ -27,7 +27,7 @@ def go():
 master = Tk()
 master.title("PTR Generator")
 
-img = ImageTk.PhotoImage(Image.open("lucid.jpg"))
+img = ImageTk.PhotoImage(Image.open("lucid-thumb.jpg"))
 master.tk.call('wm', 'iconphoto', master._w, img)
 
 templates = os.listdir("templates")
